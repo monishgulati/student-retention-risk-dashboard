@@ -7,72 +7,62 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# =========================
-# SAFE PATH LOADING
-# =========================
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model_path = os.path.join(BASE_DIR, "student_retention_model.pkl")
-display_path = os.path.join(BASE_DIR, "display_student_data.csv")
-encoded_path = os.path.join(BASE_DIR, "processed_student_data.csv")
+# ===============================
+# LOAD MODEL + DATA
+# ===============================
 
-# Load model
-model = joblib.load(model_path)
+model = joblib.load(os.path.join(BASE_DIR, "student_retention_model.pkl"))
 
-# Load datasets
-df_display = pd.read_csv(display_path)
-df_encoded = pd.read_csv(encoded_path)
+# IMPORTANT: Use processed file (contains predictions)
+df_data = pd.read_csv(os.path.join(BASE_DIR, "processed_student_data.csv"))
 
-# =========================
-# HOME ROUTE
-# =========================
-@app.route("/")
-def home():
-    return "Backend is working successfully!"
+features = [
+    "attendance",
+    "avg_gpa",
+    "has_backlog",
+    "backlog_count",
+    "event_score",
+    "gender",
+    "course",
+    "year",
+    "age"
+]
 
-# =========================
-# GET ALL STUDENTS (REAL DATA)
-# =========================
+# ===============================
+# GET ALL STUDENTS (WITH PREDICTIONS)
+# ===============================
 @app.route("/students", methods=["GET"])
 def get_students():
-    return df_display.to_json(orient="records")
+    return df_data.to_json(orient="records")
 
-# =========================
-# PREDICT USING STUDENT NAME
-# =========================
+# ===============================
+# PREDICT SINGLE STUDENT
+# ===============================
 @app.route("/predict", methods=["POST"])
 def predict():
 
     data = request.json
-    student_name = data["name"]
+    name = data["name"]
 
-    # Find student in encoded dataset
-    student_row = df_encoded[df_encoded["name"] == student_name]
+    student = df_data[df_data["name"] == name]
 
-    if student_row.empty:
+    if student.empty:
         return jsonify({"error": "Student not found"})
 
-    features = student_row[[
-        'attendance',
-        'avg_gpa',
-        'has_backlog',
-        'backlog_count',
-        'event_score',
-        'gender',
-        'course',
-        'year',
-        'age'
-    ]].values
+    X_input = student[features]
 
-    probability = model.predict_proba(features)[0][1]
+    probability = model.predict_proba(X_input)[0][1]
+    predicted_label = 1 if probability >= 0.5 else 0
 
     return jsonify({
-        "probability": float(probability)
+        "probability": float(probability),
+        "predicted_dropout": int(predicted_label)
     })
 
-# =========================
-# RUN SERVER
-# =========================
+# ===============================
+# RUN APP
+# ===============================
 if __name__ == "__main__":
     app.run(debug=True)

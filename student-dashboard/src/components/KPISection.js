@@ -5,21 +5,16 @@ function KPISection({ students }) {
 
   const total = students.length;
 
-  // ✅ FIXED: use dropout_risk instead of dropout_flag
   const highRisk = students.filter(
-    (s) => Number(s.dropout_risk) === 1
+    (s) => Number(s.dropout_thought) === 1
   ).length;
 
   const avgAttendance = total > 0
-    ? (
-        students.reduce((a, s) => a + Number(s.attendance), 0) / total
-      ).toFixed(2)
+    ? (students.reduce((a, s) => a + Number(s.attendance), 0) / total).toFixed(2)
     : 0;
 
   const avgGPA = total > 0
-    ? (
-        students.reduce((a, s) => a + Number(s.avg_gpa), 0) / total
-      ).toFixed(2)
+    ? (students.reduce((a, s) => a + Number(s.avg_gpa), 0) / total).toFixed(2)
     : 0;
 
   const retentionRate = total > 0
@@ -28,7 +23,7 @@ function KPISection({ students }) {
 
   const cards = [
     { title: "Total Students", value: total },
-    { title: "High Risk Students", value: highRisk },
+    { title: "High Risk (Intention)", value: highRisk },
     { title: "Avg Attendance", value: avgAttendance + "%" },
     { title: "Avg GPA", value: avgGPA },
     { title: "Retention Rate", value: retentionRate + "%" },

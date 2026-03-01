@@ -13,22 +13,25 @@ import {
 
 function StudentTable({ students }) {
 
+  if (!students || students.length === 0) return null;
+
   return (
     <Card sx={{ mt: 3 }}>
       <CardContent>
+
         <Typography variant="h6" gutterBottom>
-          Complete Student Dataset
+          Complete Student Dataset (Actual vs Predicted)
         </Typography>
 
         <div
           style={{
-            maxHeight: "400px",
+            maxHeight: "500px",
             overflowY: "auto",
             overflowX: "auto",
             border: "1px solid #ddd"
           }}
         >
-          <Table sx={{ minWidth: 1400 }}>
+          <Table sx={{ minWidth: 1600 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
@@ -37,47 +40,67 @@ function StudentTable({ students }) {
                 <TableCell>Course</TableCell>
                 <TableCell>Year</TableCell>
                 <TableCell>Attendance</TableCell>
-                <TableCell>GPA Sem1</TableCell>
-                <TableCell>GPA Sem2</TableCell>
-                <TableCell>GPA Sem3</TableCell>
-                <TableCell>GPA Sem4</TableCell>
-                <TableCell>GPA Sem5</TableCell>
                 <TableCell>Avg GPA</TableCell>
                 <TableCell>Backlog Count</TableCell>
                 <TableCell>Event Score</TableCell>
-                <TableCell>Risk</TableCell>
+
+                <TableCell>Actual</TableCell>
+                <TableCell>Predicted</TableCell>
+                <TableCell>Probability</TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
-              {students.map((student, index) => (
-                <TableRow key={index}>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.age}</TableCell>
-                  <TableCell>{student.gender}</TableCell>
-                  <TableCell>{student.course}</TableCell>
-                  <TableCell>{student.year}</TableCell>
-                  <TableCell>{student.attendance}</TableCell>
-                  <TableCell>{student.gpa_sem1}</TableCell>
-                  <TableCell>{student.gpa_sem2}</TableCell>
-                  <TableCell>{student.gpa_sem3}</TableCell>
-                  <TableCell>{student.gpa_sem4}</TableCell>
-                  <TableCell>{student.gpa_sem5}</TableCell>
-                  <TableCell>{student.avg_gpa}</TableCell>
-                  <TableCell>{student.backlog_count}</TableCell>
-                  <TableCell>{student.event_score}</TableCell>
+              {students.map((student, index) => {
 
-                  {/* ✅ FIXED HERE */}
-                  <TableCell>
-                    {Number(student.dropout_risk) === 1 ? (
-                      <Chip label="High" color="error" />
-                    ) : (
-                      <Chip label="Low" color="success" />
-                    )}
-                  </TableCell>
+                const actual = Number(student.dropout_thought);
+                const predicted = Number(student.predicted_dropout);
 
-                </TableRow>
-              ))}
+                const isWrong = actual !== predicted;
+
+                return (
+                  <TableRow
+                    key={index}
+                    sx={{
+                      backgroundColor: isWrong ? "#ffe6e6" : "inherit"
+                    }}
+                  >
+                    <TableCell>{student.name}</TableCell>
+                    <TableCell>{student.age}</TableCell>
+                    <TableCell>{student.gender}</TableCell>
+                    <TableCell>{student.course}</TableCell>
+                    <TableCell>{student.year}</TableCell>
+                    <TableCell>{student.attendance}</TableCell>
+                    <TableCell>{student.avg_gpa}</TableCell>
+                    <TableCell>{student.backlog_count}</TableCell>
+                    <TableCell>{student.event_score}</TableCell>
+
+                    {/* Actual */}
+                    <TableCell>
+                      {actual === 1 ? (
+                        <Chip label="High" color="error" />
+                      ) : (
+                        <Chip label="Low" color="success" />
+                      )}
+                    </TableCell>
+
+                    {/* Predicted */}
+                    <TableCell>
+                      {predicted === 1 ? (
+                        <Chip label="High" color="warning" />
+                      ) : (
+                        <Chip label="Low" color="info" />
+                      )}
+                    </TableCell>
+
+                    {/* Probability */}
+                    <TableCell>
+                      {(Number(student.predicted_probability) * 100).toFixed(2)}%
+                    </TableCell>
+
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

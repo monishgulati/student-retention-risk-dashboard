@@ -13,7 +13,7 @@ function ChartsSection({ students }) {
 
   if (!students || students.length === 0) return null;
 
-  const highRisk = students.filter(s => s.dropout_risk === 1).length;
+  const highRisk = students.filter(s => Number(s.dropout_thought) === 1).length;
   const lowRisk = students.length - highRisk;
 
   const data = [
@@ -26,20 +26,11 @@ function ChartsSection({ students }) {
   return (
     <Card elevation={4} sx={{ borderRadius: 3 }}>
       <CardContent>
-
         <Typography variant="h6" gutterBottom>
-          Risk Distribution
+          Dropout Intention Distribution
         </Typography>
 
-        {/* FORCE PERFECT SQUARE */}
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: 400,
-            aspectRatio: "1 / 1",   // 🔥 This fixes oval problem
-            margin: "0 auto"
-          }}
-        >
+        <Box sx={{ width: "100%", maxWidth: 400, aspectRatio: "1 / 1", margin: "0 auto" }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -60,7 +51,6 @@ function ChartsSection({ students }) {
             </PieChart>
           </ResponsiveContainer>
         </Box>
-
       </CardContent>
     </Card>
   );
