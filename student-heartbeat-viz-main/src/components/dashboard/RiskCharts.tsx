@@ -4,8 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from "recharts";
 import { useStudents } from "@/context/StudentsContext";
+import type { TooltipProps } from "recharts";
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+}: TooltipProps<number, string>) =>  {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card border border-glass-border px-3 py-2 text-xs">
