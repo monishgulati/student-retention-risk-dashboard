@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -9,7 +10,7 @@ import type { TooltipProps } from "recharts";
 const CustomTooltip = ({
   active,
   payload,
-}: TooltipProps<number, string>) =>  {
+}: TooltipProps<number, string>) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card border border-glass-border px-3 py-2 text-xs">
@@ -18,29 +19,39 @@ const CustomTooltip = ({
   );
 };
 
-export function RiskCharts() {
+export const RiskCharts = memo(() => {
   const { students } = useStudents();
 
-  const low = students.filter(s => s.predicted_risk_probability <= 0.3).length;
-  const med = students.filter(s => s.predicted_risk_probability > 0.3 && s.predicted_risk_probability <= 0.6).length;
-  const high = students.filter(s => s.predicted_risk_probability > 0.6).length;
-  const riskDistribution = [
-    { name: "Low Risk", value: low, color: "hsl(160, 84%, 39%)" },
-    { name: "Medium Risk", value: med, color: "hsl(38, 92%, 50%)" },
-    { name: "High Risk", value: high, color: "hsl(0, 84%, 60%)" },
-  ];
+  const { riskDistribution, courseData } = useMemo(() => {
+    const low = students.filter(s => s.predicted_risk_probability <= 0.3).length;
+    const med = students.filter(s => s.predicted_risk_probability > 0.3 && s.predicted_risk_probability <= 0.6).length;
+    const high = students.filter(s => s.predicted_risk_probability > 0.6).length;
 
-  const courses: Record<string, { total: number; highRisk: number }> = {};
-  students.forEach(s => {
-    if (!courses[s.course]) courses[s.course] = { total: 0, highRisk: 0 };
-    courses[s.course].total++;
-    if (s.predicted_risk_probability > 0.6) courses[s.course].highRisk++;
-  });
-  const courseData = Object.entries(courses).map(([name, d]) => ({ name: name.slice(0, 8), ...d }));
+    const riskDist = [
+      { name: "Low Risk", value: low, color: "hsl(160, 84%, 39%)" },
+      { name: "Medium Risk", value: med, color: "hsl(38, 92%, 50%)" },
+      { name: "High Risk", value: high, color: "hsl(0, 84%, 60%)" },
+    ];
+
+    const courses: Record<string, { total: number; highRisk: number }> = {};
+    students.forEach(s => {
+      if (!courses[s.course]) courses[s.course] = { total: 0, highRisk: 0 };
+      courses[s.course].total++;
+      if (s.predicted_risk_probability > 0.6) courses[s.course].highRisk++;
+    });
+
+    const cData = Object.entries(courses).map(([name, d]) => ({ name: name.slice(0, 8), ...d }));
+
+    return { riskDistribution: riskDist, courseData: cData };
+  }, [students]);
+
+  const Container = students.length > 2000 ? "div" : motion.div;
+  const animProps1: any = students.length > 2000 ? {} : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.4 } };
+  const animProps2: any = students.length > 2000 ? {} : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.5 } };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5">
+      <Container {...animProps1} className="glass-card p-5">
         <h2 className="text-lg font-semibold font-display text-foreground mb-1">Risk Distribution</h2>
         <p className="text-xs text-muted-foreground mb-4">Overall student risk breakdown</p>
         <div className="h-[220px]">
@@ -62,9 +73,9 @@ export function RiskCharts() {
             </div>
           ))}
         </div>
-      </motion.div>
+      </Container>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-5">
+      <Container {...animProps2} className="glass-card p-5">
         <h2 className="text-lg font-semibold font-display text-foreground mb-1">Risk by Department</h2>
         <p className="text-xs text-muted-foreground mb-4">High-risk students per course</p>
         <div className="h-[260px]">
@@ -79,7 +90,8 @@ export function RiskCharts() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </motion.div>
+      </Container>
     </div>
   );
-}
+});
+RiskCharts.displayName = "RiskCharts";

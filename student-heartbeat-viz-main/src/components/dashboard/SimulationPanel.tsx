@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, memo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, User, BookOpen, Calendar, Search, Check } from "lucide-react";
 import { getRiskLevel, type Student } from "@/data/mockStudents";
@@ -8,19 +8,29 @@ import { RiskGauge } from "./RiskGauge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-export function SimulationPanel() {
+export const SimulationPanel = memo(() => {
   const { students } = useStudents();
   const [selectedName, setSelectedName] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedQuery, setDebouncedQuery] = useState<string>("");
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState<(Student & { liveRisk?: number }) | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const filtered = students.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const filtered = useMemo(() => {
+    if (!debouncedQuery.trim()) return [];
+    return students
+      .filter(s => s.name.toLowerCase().includes(debouncedQuery.toLowerCase()))
+      .slice(0, 50); // Limit to 50 for performance
+  }, [students, debouncedQuery]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -36,22 +46,29 @@ export function SimulationPanel() {
   }, []);
 
   const handleSelect = (name: string) => {
-    setSelectedName(name);
-    setSearchQuery(name);
-    setIsOpen(false);
+    startTransition(() => {
+      setSelectedName(name);
+      setSearchQuery(name);
+      setIsOpen(false);
+    });
   };
 
   const handlePredict = async () => {
     const student = students.find(s => s.name === selectedName);
     if (!student) return;
+
     setIsLoading(true);
     setResult(null);
 
     try {
       const riskProbability = await predictRisk(selectedName);
-      setResult({ ...student, predicted_risk_probability: riskProbability, liveRisk: riskProbability });
+      startTransition(() => {
+        setResult({ ...student, predicted_risk_probability: riskProbability, liveRisk: riskProbability });
+      });
     } catch {
-      setResult(student);
+      startTransition(() => {
+        setResult(student);
+      });
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +85,7 @@ export function SimulationPanel() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="glass-card-glow p-6"
+      className="glass-card-glow p-6 relative z-50"
     >
       <div className="flex items-center gap-2 mb-5">
         <div className="p-1.5 rounded-lg bg-primary/10">
@@ -92,8 +109,8 @@ export function SimulationPanel() {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setSelectedName("");
-                  setIsOpen(true);
+                  if (selectedName) setSelectedName("");
+                  if (!isOpen) setIsOpen(true);
                 }}
                 onFocus={() => setIsOpen(true)}
                 placeholder="Type or search student name..."
@@ -101,7 +118,7 @@ export function SimulationPanel() {
               />
             </div>
             <AnimatePresence>
-              {isOpen && (
+              {isOpen && searchQuery.trim() && (
                 <motion.div
                   ref={dropdownRef}
                   initial={{ opacity: 0, y: -4 }}
@@ -115,14 +132,14 @@ export function SimulationPanel() {
                       No students found
                     </div>
                   ) : (
-                    filtered.map((s, i) => (
+                    filtered.map((s) => (
                       <button
-                        key={`${s.name}-${i}`}
+                        key={s.name}
                         onClick={() => handleSelect(s.name)}
                         className="flex items-center justify-between w-full px-3 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors"
                       >
-                        <span>{s.name}</span>
-                        {selectedName === s.name && <Check className="w-3.5 h-3.5 text-primary" />}
+                        <span className="truncate">{s.name}</span>
+                        {selectedName === s.name && <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-2" />}
                       </button>
                     ))
                   )}
@@ -133,10 +150,10 @@ export function SimulationPanel() {
 
           <Button
             onClick={handlePredict}
-            disabled={!selectedName || isLoading}
+            disabled={!selectedName || isLoading || isPending}
             className="w-full gap-2 h-11 font-semibold text-sm"
           >
-            {isLoading ? (
+            {isLoading || isPending ? (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -145,10 +162,10 @@ export function SimulationPanel() {
             ) : (
               <Zap className="w-4 h-4" />
             )}
-            {isLoading ? "Analyzing..." : "Run Prediction"}
+            {isLoading || isPending ? "Analyzing..." : "Run Prediction"}
           </Button>
 
-          {selectedName && !result && !isLoading && (
+          {selectedName && !result && !isLoading && !isPending && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[11px] text-muted-foreground text-center mt-2">
               Click to analyze risk probability
             </motion.div>
@@ -210,4 +227,5 @@ export function SimulationPanel() {
       </div>
     </motion.div>
   );
-}
+});
+SimulationPanel.displayName = "SimulationPanel";

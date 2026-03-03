@@ -1,8 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { motion } from "framer-motion";
+import { useStudents } from "@/context/StudentsContext";
 
-export function AnimatedBackground() {
+export const AnimatedBackground = memo(() => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { students } = useStudents();
+
+  // Intelligent Animation Strategy: Reduce particles for massive datasets to free up the main thread
+  const particleCount = students.length > 2000 ? 15 : 50;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -21,7 +26,7 @@ export function AnimatedBackground() {
     window.addEventListener("resize", resize);
 
     // Create particles
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -70,7 +75,7 @@ export function AnimatedBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [particleCount]);
 
   return (
     <motion.canvas
@@ -81,4 +86,5 @@ export function AnimatedBackground() {
       transition={{ duration: 2 }}
     />
   );
-}
+});
+AnimatedBackground.displayName = "AnimatedBackground";

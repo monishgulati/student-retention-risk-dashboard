@@ -9,12 +9,10 @@ import joblib
 # LOAD DATA
 # ======================================
 
-<<<<<<< Updated upstream
-df = pd.read_csv("student_retention_10percent_null_10percent_outliers.csv")
-=======
-df = pd.read_csv(r"C:\Users\Monish Gulati\Downloads\Student Retention Risk Scoring Model for Higher Education Institutions. (Responses) - Form Responses 1.csv")
-df.columns = df.columns.str.strip()
->>>>>>> Stashed changes
+# Local path (commented to use remote dataset):
+# df = pd.read_csv(r"C:\Users\Monish Gulati\Downloads\Student Retention Risk Scoring Model for Higher Education Institutions. (Responses) - Form Responses 1.csv")
+# df.columns = df.columns.str.strip()
+df = pd.read_csv(r"C:\Users\Monish Gulati\Desktop\studen retention\student-retention-risk-dashboard\Student_Data.csv")
 
 print("Initial Shape:", df.shape)
 

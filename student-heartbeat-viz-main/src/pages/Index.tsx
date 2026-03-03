@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { GraduationCap, Activity } from "lucide-react";
+import { useStudents } from "@/context/StudentsContext";
 
 import { AnimatedBackground } from "@/components/dashboard/AnimatedBackground";
 import { KPICards } from "@/components/dashboard/KPICards";
@@ -9,50 +9,25 @@ import { SimulationPanel } from "@/components/dashboard/SimulationPanel";
 import { RiskCharts } from "@/components/dashboard/RiskCharts";
 import { TopAtRiskStudents } from "@/components/dashboard/TopAtRiskStudents";
 import { StudentTable } from "@/components/dashboard/StudentTable";
-
-interface Student {
-  name: string;
-  course: string;
-  year: string;
-  attendance: number;
-  avg_gpa: number;
-  backlog_count: number;
-  predicted_risk_probability: number;
-}
+import { KeyRiskInsights } from "@/components/dashboard/KeyRiskInsights";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [riskProbability, setRiskProbability] = useState<number | null>(null);
-
-  // Fetch students from backend
-  useEffect(() => {
-    axios
-      .get("http://127.0.0.1:5000/students")
-      .then((res) => {
-        setStudents(res.data);
-      })
-      .catch((err) => console.error("API Error:", err));
-  }, []);
-
-  // Predict selected student
-  const handlePredict = async (name: string) => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:5000/predict",
-        { name }
-      );
-
-      setRiskProbability(response.data.risk_probability);
-    } catch (error) {
-      console.error("Prediction error:", error);
-    }
-  };
+  const { students, isLoading, isError } = useStudents();
 
   // Prevent blank screen crash
-  if (!students || students.length === 0) {
+  if (isLoading || !students || students.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
         Loading students...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Error loading students dataset.
       </div>
     );
   }
@@ -93,28 +68,46 @@ const Index = () => {
             </div>
           </motion.div>
 
-          {/* KPIs */}
-          <KPICards students={students} />
-
-          {/* Simulation */}
-          <SimulationPanel
-            students={students}
-            onPredict={handlePredict}
-            riskProbability={riskProbability}
-          />
-
-          {/* Charts + Top Risk */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <div className="xl:col-span-2">
-              <RiskCharts students={students} />
+          <Tabs defaultValue="overview" className="space-y-8">
+            <div className="flex justify-center sm:justify-start">
+              <TabsList className="bg-secondary/50 border border-border/50 p-1">
+                <TabsTrigger value="overview" className="px-6 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all">Overview</TabsTrigger>
+                <TabsTrigger value="insights" className="px-6 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-md transition-all">Model Insights</TabsTrigger>
+              </TabsList>
             </div>
-            <div>
-              <TopAtRiskStudents students={students} />
-            </div>
-          </div>
 
-          {/* Table */}
-          <StudentTable students={students} />
+            <TabsContent value="overview" className="space-y-8 animate-in fade-in-50 duration-500">
+              {/* KPIs */}
+              <KPICards />
+
+              {/* Insights Panel */}
+              <KeyRiskInsights />
+
+              {/* Simulation */}
+              <SimulationPanel />
+
+              {/* Charts + Top Risk */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <div className="xl:col-span-2">
+                  <RiskCharts />
+                </div>
+                <div>
+                  <TopAtRiskStudents />
+                </div>
+              </div>
+
+              {/* Table */}
+              <StudentTable />
+            </TabsContent>
+
+            <TabsContent value="insights" className="space-y-6 animate-in fade-in-50 duration-500">
+              <div className="glass-card p-12 text-center text-muted-foreground flex flex-col items-center justify-center min-h-[400px]">
+                <Activity className="w-12 h-12 mb-4 text-muted-foreground/50" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">Model Insights</h2>
+                <p>Advanced predictive analytics and risk factors will be displayed here.</p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Footer */}
           <div className="text-center py-4 text-xs text-muted-foreground">
