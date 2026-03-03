@@ -2,12 +2,6 @@
     "version": 2,
     "buildCommand": "cd student_Dashboard && npm install && npm run build",
     "outputDirectory": "student_Dashboard/dist",
-    "functions": {
-        "api/*.py": {
-            "runtime": "python@3.10",
-            "maxDuration": 30
-        }
-    },
     "rewrites": [
         {
             "source": "/api/feature-importance",
