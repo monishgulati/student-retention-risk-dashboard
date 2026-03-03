@@ -4,7 +4,7 @@
     "outputDirectory": "student_Dashboard/dist",
     "functions": {
         "api/*.py": {
-            "runtime": "python3.10",
+            "runtime": "python@3.10",
             "maxDuration": 30
         }
     },
