@@ -3,16 +3,14 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 import joblib
 
 # ======================================
 # LOAD DATA
 # ======================================
 
-# Local path (commented to use remote dataset):
-# df = pd.read_csv(r"C:\Users\Monish Gulati\Downloads\Student Retention Risk Scoring Model for Higher Education Institutions. (Responses) - Form Responses 1.csv")
-# df.columns = df.columns.str.strip()
-df = pd.read_csv(r"C:\Users\Monish Gulati\Desktop\studen retention\student-retention-risk-dashboard\Student_Data.csv")
+df = pd.read_csv("Student_Data.csv")
 
 print("Initial Shape:", df.shape)
 
@@ -112,6 +110,19 @@ X = df_encoded[features]
 y = df_encoded["risk_probability"]
 
 # ======================================
+# TRAIN TEST SPLIT (80 / 20)
+# ======================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.20,
+    random_state=42
+)
+
+print("Training samples:", X_train.shape[0])
+print("Testing samples:", X_test.shape[0])
+
+# ======================================
 # TRAIN MODEL
 # ======================================
 
@@ -121,21 +132,21 @@ model = RandomForestRegressor(
     random_state=42
 )
 
-model.fit(X, y)
+model.fit(X_train, y_train)
 
 # ======================================
 # EVALUATION
 # ======================================
 
-preds = model.predict(X)
+preds = model.predict(X_test)
 
 print("\nRegression Evaluation Metrics:")
-print("MAE:", round(mean_absolute_error(y, preds), 4))
-print("RMSE:", round(np.sqrt(mean_squared_error(y, preds)), 4))
-print("R2 Score:", round(r2_score(y, preds), 4))
+print("MAE:", round(mean_absolute_error(y_test, preds), 4))
+print("RMSE:", round(np.sqrt(mean_squared_error(y_test, preds)), 4))
+print("R2 Score:", round(r2_score(y_test, preds), 4))
 
 # ======================================
-# GENERATE PREDICTIONS
+# GENERATE PREDICTIONS FOR ALL DATA
 # ======================================
 
 df_encoded["predicted_risk_probability"] = model.predict(X)
