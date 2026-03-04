@@ -1,82 +1,162 @@
 # Student Retention Risk Prediction Dashboard 🎓
 
-## Problem Statement
-Student dropout rates are a significant challenge for educational institutions worldwide. When struggling students are not identified and supported early enough, they may drop out, which negatively impacts both their future prospects and the institution's retention metrics. Predicting dropout risk early allows educators and administrators to proactively intervene, provide targeted support, and ultimately improve student success rates.
+A final-year data science project that predicts student dropout risk using machine learning. We built a full-stack application with a React dashboard on the frontend and a Python Flask API on the backend, powered by a trained Random Forest model.
 
-## Features ✨
-- **Student Dataset Viewer**: Browse and filter comprehensive student records including academic performance and demographics.
-- **Dropout Risk Prediction Engine**: Real-time risk scoring for individual students based on machine learning models.
-- **GPA Trend Analysis**: Visualize historical GPA data to identify declining academic performance trajectories.
-- **Attendance vs. Risk Visualization**: Understand the correlation between class attendance and overall dropout probability.
-- **Backlog Impact Analysis**: Analyze how current and cleared backlogs affect a student's likelihood of retention.
-- **Feature Importance Visualization**: Transparent AI that explains which factors (e.g., attendance, GPA, backlogs) are driving the risk predictions.
+---
 
-## Tech Stack 🛠️
+## Why We Built This
 
-### Frontend
-- React
-- TypeScript
+One of the biggest problems in higher education is that students who are at risk of dropping out often go unnoticed until it's too late. We wanted to build something that could help faculty identify struggling students early so they can step in and actually help.
+
+This project lets you see each student's predicted dropout risk based on their attendance, GPA trends, backlogs, and event participation — all in one dashboard.
+
+---
+
+## What the Dashboard Can Do
+
+- **Student Table** — Browse and search all student records with their academic info
+- **Risk Prediction Engine** — Run a prediction for any individual student in real-time
+- **GPA Trend Chart** — See how a student's GPA has changed across semesters
+- **Attendance vs Risk Plot** — Visual correlation between attendance and dropout probability
+- **Backlog Impact Analysis** — How backlogs affect dropout risk
+- **Feature Importance Chart** — Which factors are driving the model's predictions
+
+---
+
+## Tech Stack
+
+**Frontend**
+- React + TypeScript
 - Vite
 - Tailwind CSS
-- Recharts (for data visualization)
+- Recharts
 
-### Backend
-- Python
-- Flask
-- scikit-learn
-- pandas
-- numpy
-- joblib
+**Backend**
+- Python + Flask
+- scikit-learn (RandomForestRegressor)
+- pandas, numpy, joblib
+- matplotlib (for evaluation plots during training)
 
-### Deployment
-- **Frontend**: Deployed on Vercel
-- **Backend**: Deployed on Render
+**Deployment**
+- Frontend → Vercel
+- Backend → Render
 
-## Machine Learning Model 🧠
-The core prediction engine is powered by a **Random Forest** classification model. This ensemble learning method leverages a multitude of decision trees during training to output highly accurate dropout risk predictions. The model was trained on historical student data, capturing complex non-linear relationships across varying academic and engagement metrics.
+---
 
-## System Architecture 🏗️
-The client-server architecture isolates the machine learning compute from the user interface:
-1. The **React/TypeScript Frontend** provides an interactive dashboard for users.
-2. The frontend sends user requests (data queries or prediction requests) via HTTP to the **Flask API**.
-3. The Flask API receives the request, processes the input data using `pandas`/`numpy`, and feeds it into the pre-trained Random Forest model loaded via `joblib`.
-4. The model returns a risk prediction (Low, Medium, or High risk), which the Flask API sends back to the frontend to be visualized dynamically.
+## Machine Learning Model
 
-## Project Structure 📂
-```text
-student-retention-risk-dashboard/
-├── student_Dashboard/          # Frontend React application (Vite)
-│   ├── src/                    # UI Components, hooks, and services
-│   ├── public/                 # Static assets (favicons, etc.)
-│   └── package.json            # Node.js dependencies
-├── api/                        # (or backend scripts) Python backend logic
-├── model/                      # Trained machine learning model files (.pkl / .joblib)
-├── dataset/                    # Training and testing datasets (.csv)
-├── app.py                      # Main Flask application entry point
-└── requirements.txt            # Python dependencies
+We used a **Random Forest Regressor** to predict a continuous dropout risk score between 0 and 1 for each student.
+
+We chose Random Forest because:
+- It handles both numeric and categorical features well
+- It doesn't need much preprocessing (no feature scaling required)
+- It's interpretable — we can extract feature importances
+- It generalizes well without overfitting too easily
+
+### Features used for prediction
+| Feature | Description |
+|---|---|
+| Attendance | % of classes attended |
+| Avg GPA | Mean GPA across 5 semesters |
+| Backlog Count | Number of pending backlogs |
+| Has Backlog | Binary flag (0 or 1) |
+| Event Score | Participation level (0–3 scale) |
+| Gender | Encoded from form responses |
+| Course | Encoded from form responses |
+| Year | Current year of study |
+| Age | Student age |
+
+### Train / Test Split
+
+We split the dataset 80/20 using scikit-learn's `train_test_split`:
+- **3391 samples** for training
+- **848 samples** for testing
+
+This ensures the model is evaluated on data it has never seen during training.
+
+### Model Performance
+
+```
+Training R²   : 0.9967
+Testing  R²   : 0.9863
+MAE           : 0.0096
+RMSE          : 0.0152
+
+5-Fold Cross Validation
+CV R² Mean    : 0.9832
+CV R² Std Dev : 0.0033
 ```
 
-## How to Run Locally 🚀
+The small gap between training and testing R² (0.9967 vs 0.9863) tells us the model isn't overfitting badly. The cross-validation std dev of 0.003 means performance is consistent across different data splits.
 
-### 1. Backend Setup
-First, ensure you have Python installed. Navigate to the root directory and install the dependencies:
+---
+
+## Project Structure
+
+```
+student-retention-risk-dashboard/
+├── student_Dashboard/         # React frontend (Vite)
+│   ├── src/                   # Components, hooks, API services
+│   └── package.json
+├── main.py                    # Model training script
+├── app.py                     # Flask API server
+├── Student_Data.csv           # Raw dataset
+├── display_student_data.csv   # Cleaned dataset for dashboard display
+├── processed_student_data.csv # Encoded dataset for ML predictions
+├── student_retention_model.pkl # Trained Random Forest model
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## How to Run Locally
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/monishgulati/student-retention-risk-dashboard.git
+cd student-retention-risk-dashboard
+```
+
+### 2. Set up the backend
 ```bash
 pip install -r requirements.txt
+```
+
+If you want to retrain the model from scratch:
+```bash
+python main.py
+```
+
+Then start the Flask API:
+```bash
 python app.py
 ```
-The Flask server should now be running locally on `http://127.0.0.1:5000`.
+The server will run at `http://127.0.0.1:5000`
 
-### 2. Frontend Setup
-Open a new terminal window, navigate to the frontend directory, install the dependencies, and start the development server:
+### 3. Set up the frontend
 ```bash
 cd student_Dashboard
 npm install
+```
+
+Create a `.env.development.local` file inside `student_Dashboard/` with:
+```
+VITE_API_URL=http://127.0.0.1:5000
+```
+
+Then start the dev server:
+```bash
 npm run dev
 ```
-The Vite development server will start, usually accessible at `http://localhost:5173` (or the port specified in the console).
+The dashboard will be available at `http://localhost:5173`
+
+---
 
 ## Live Demo 🌐
 **[Insert Deployed Vercel Link Here]**
+
+---
 
 ## Screenshots 📸
 
@@ -89,7 +169,11 @@ The Vite development server will start, usually accessible at `http://localhost:
 ### Data Visualizations
 ![Data Visualizations](data_visualizations.png)
 
-## Future Improvements 🔮
-- **Integration with Real Institutional Datasets**: Connect the application to real-world SIS (Student Information Systems) or LMS (Learning Management Systems).
-- **Model Retraining Pipeline**: Implement an automated pipeline to securely ingest new student data and retrain the model periodically, preventing data drift.
-- **Authentication for Faculty Users**: Add secure login functionality (e.g., JWT, OAuth) with role-based access control (RBAC) ensuring data privacy.
+---
+
+## What We'd Improve Next
+
+- Connect to a real college's student information system for live data
+- Add a retraining pipeline so the model updates periodically as new data comes in
+- Add login authentication so only authorized faculty can access the dashboard
+- Experiment with other models like XGBoost or LightGBM to compare performance
