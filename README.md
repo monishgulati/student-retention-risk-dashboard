@@ -1,7 +1,14 @@
 # Student Retention Risk Prediction Dashboard 🎓
 
-A final-year data science project that predicts student dropout risk using machine learning. We built a full-stack application with a React dashboard on the frontend and a Python Flask API on the backend, powered by a trained Random Forest model.
+## 🚀 Overview
+Built a full-stack machine learning system to predict student dropout risk (churn prediction) and visualize insights through an interactive dashboard.
 
+The system helps identify at-risk students early, enabling proactive intervention to improve retention.
+
+**Key Highlights:**
+- End-to-end pipeline: data → model → API → dashboard
+- Real-time risk prediction using Random Forest
+- Interactive visualizations for decision-making
 ---
 
 ## Why We Built This
@@ -22,6 +29,13 @@ This project lets you see each student's predicted dropout risk based on their a
 - **Feature Importance Chart** — Which factors are driving the model's predictions
 
 ---
+
+## 💡 Business Impact
+- Enables early identification of at-risk students
+- Helps institutions improve retention rates
+- Supports data-driven decision making for academic interventions
+
+-----
 
 ## Tech Stack
 
@@ -44,14 +58,12 @@ This project lets you see each student's predicted dropout risk based on their a
 ---
 
 ## Machine Learning Model
+Implemented a Random Forest Regressor to predict a continuous dropout risk score (0–1).
 
-We used a **Random Forest Regressor** to predict a continuous dropout risk score between 0 and 1 for each student.
-
-We chose Random Forest because:
-- It handles both numeric and categorical features well
-- It doesn't need much preprocessing (no feature scaling required)
-- It's interpretable — we can extract feature importances
-- It generalizes well without overfitting too easily
+**Why Random Forest:**
+- Handles mixed feature types effectively
+- Robust against overfitting
+- Provides feature importance for interpretability
 
 ### Features used for prediction
 | Feature | Description |
@@ -75,6 +87,7 @@ We split the dataset 80/20 using scikit-learn's `train_test_split`:
 This ensures the model is evaluated on data it has never seen during training.
 
 ### Model Performance
+The model demonstrates high predictive performance with strong generalization on unseen data:
 
 ```
 Training R²   : 0.9967
@@ -157,8 +170,6 @@ The dashboard will be available at `http://localhost:5173`
 **[Insert Deployed Vercel Link Here]**
 
 ---
-
-## Screenshots 📸
 
 ### Dashboard Overview
 ![Dashboard Overview](dashboard_overview.png)
